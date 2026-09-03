@@ -629,17 +629,11 @@
     const slice = 360 / n;
     const winnerIndex = pickWinnerIndex();
 
-    // Angle (from top, clockwise) of the middle of the winner slice, in the wheel's own coordinate space.
     const winnerMidAngle = winnerIndex * slice + slice/2;
-
-    // We want: (currentRotation + spinAmount) such that pointer (fixed at top, 0deg)
-    // lands on winnerMidAngle of the wheel. Wheel rotates clockwise by rotation R.
-    // A point originally at angle A ends up at (A + R) mod 360.
-    // We want (winnerMidAngle + R) mod 360 == 0  =>  R = (360 - winnerMidAngle) mod 360
     const baseTarget = (360 - winnerMidAngle) % 360;
 
     const extraSpins = 6 + Math.floor(Math.random()*3); // 6-8 full turns
-    const jitter = (Math.random() - 0.5) * (slice * 0.6); // land off-center a little, still inside slice
+    const jitter = (Math.random() - 0.5) * (slice * 0.6);
 
     const currentMod = currentRotation % 360;
     let delta = (baseTarget - currentMod + 360) % 360;
