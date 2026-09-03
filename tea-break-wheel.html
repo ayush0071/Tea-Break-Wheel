@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tea Break Incharge — Lucky Draw</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FFF7E8;
+    --cream-2:#FFEFD1;
+    --espresso:#3E2A1E;
+    --espresso-soft:#6B4E3A;
+    --gold:#E0A527;
+    --coral:#FF6B4A;
+    --teal:#2A9D8F;
+    --plum:#8E5572;
+    --olive:#8A8F3C;
+    --sky:#4A90A4;
+    --rose:#D66B8B;
+    --mustard:#D9922B;
+    --line: rgba(62,42,30,0.14);
+    --shadow: 0 18px 40px rgba(62,42,30,0.18);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(224,165,39,0.16), transparent 40%),
+      radial-gradient(circle at 88% 85%, rgba(255,107,74,0.14), transparent 45%),
+      var(--cream);
+    font-family:'Nunito', sans-serif;
+    color:var(--espresso);
+    display:flex;
+    justify-content:center;
+    padding:36px 18px 60px;
+  }
+  .app{
+    width:100%;
+    max-width:1180px;
+  }
+  header{
+    text-align:center;
+    margin-bottom:30px;
+  }
+  .kicker{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:15px;
+    color:var(--coral);
+    letter-spacing:0.02em;
+  }
+  h1{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:clamp(32px, 5vw, 52px);
+    margin:6px 0 8px;
+    line-height:1.05;
+  }
+  h1 span{color:var(--gold);}
+  .sub{
+    color:var(--espresso-soft);
+    font-size:16px;
+    max-width:560px;
+    margin:0 auto;
+  }
+
+  .layout{
+    display:grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap:28px;
+    align-items:start;
+  }
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  .card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:22px;
+    padding:26px;
+    box-shadow:var(--shadow);
+  }
+
+  /* ---- Wheel stage ---- */
+  .stage{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+  }
+  .period-badge{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:15px;
+    background:var(--cream-2);
+    color:var(--espresso);
+    padding:8px 18px;
+    border-radius:999px;
+    margin-bottom:18px;
+    border:1px solid var(--line);
+  }
+  .period-badge b{color:var(--coral);}
+
+  .wheel-wrap{
+    position:relative;
+    width:min(420px, 82vw);
+    height:min(420px, 82vw);
+    margin:6px 0 26px;
+  }
+  .pointer{
+    position:absolute;
+    top:-16px;
+    left:50%;
+    transform:translateX(-50%);
+    width:0; height:0;
+    border-left:16px solid transparent;
+    border-right:16px solid transparent;
+    border-top:30px solid var(--espresso);
+    z-index:5;
+    filter:drop-shadow(0 3px 3px rgba(0,0,0,0.25));
+  }
+  .pointer::after{
+    content:"";
+    position:absolute;
+    top:-30px; left:-16px;
+    width:0;height:0;
+    border-left:16px solid transparent;
+    border-right:16px solid transparent;
+    border-top:26px solid var(--coral);
+  }
+  .hub{
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    width:64px; height:64px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff, var(--gold) 65%, var(--mustard));
+    border:4px solid #fff;
+    box-shadow:0 4px 14px rgba(0,0,0,0.25);
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px;
+    z-index:4;
+  }
+  #wheelCanvas{
+    width:100%; height:100%;
+    border-radius:50%;
+    box-shadow: 0 0 0 8px #fff, 0 0 0 11px var(--line), var(--shadow);
+    transition: transform 4.6s cubic-bezier(0.16, 0.86, 0.32, 1);
+  }
+
+  .spin-btn{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:20px;
+    letter-spacing:0.01em;
+    color:#fff;
+    background:linear-gradient(180deg, var(--coral), #E14E2C);
+    border:none;
+    padding:16px 46px;
+    border-radius:999px;
+    cursor:pointer;
+    box-shadow:0 10px 0 #B93A1F, 0 16px 24px rgba(225,78,44,0.35);
+    transition: transform 0.08s ease;
+  }
+  .spin-btn:active{transform:translateY(6px); box-shadow:0 4px 0 #B93A1F, 0 8px 16px rgba(225,78,44,0.3);}
+  .spin-btn:disabled{
+    background:#D8CFC2; color:#8a8072; box-shadow:0 10px 0 #bdb4a6; cursor:not-allowed;
+  }
+  .hint{
+    margin-top:14px;
+    font-size:13.5px;
+    color:var(--espresso-soft);
+  }
+
+  /* ---- Panel ---- */
+  .panel-title{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:20px;
+    margin:0 0 4px;
+  }
+  .panel-desc{
+    font-size:14px;
+    color:var(--espresso-soft);
+    margin:0 0 18px;
+  }
+  .period-row{
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+  }
+  select, input[type="text"], input[type="number"]{
+    font-family:'Nunito', sans-serif;
+    font-weight:700;
+    font-size:14.5px;
+    border:2px solid var(--line);
+    border-radius:12px;
+    padding:10px 12px;
+    background:var(--cream);
+    color:var(--espresso);
+    outline:none;
+  }
+  select:focus, input:focus{border-color:var(--gold);}
+  #monthSelect{flex:1.4;}
+  #yearInput{flex:1;}
+
+  .add-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  #nameInput{flex:1;}
+  .add-btn{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    background:var(--teal);
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    padding:0 20px;
+    cursor:pointer;
+    font-size:15px;
+  }
+  .add-btn:hover{filter:brightness(1.05);}
+
+  .chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:6px;
+    max-height:210px;
+    overflow-y:auto;
+    padding:4px 2px;
+  }
+  .chip{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--cream-2);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:7px 8px 7px 14px;
+    font-weight:700;
+    font-size:14px;
+  }
+  .chip .dot{
+    width:10px;height:10px;border-radius:50%;flex:none;
+  }
+  .chip button{
+    border:none;
+    background:rgba(62,42,30,0.08);
+    color:var(--espresso);
+    width:20px;height:20px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:13px;
+    line-height:1;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .chip button:hover{background:var(--coral); color:#fff;}
+  .empty-note{
+    font-size:13.5px;
+    color:var(--espresso-soft);
+    padding:10px 2px;
+  }
+
+  .divider{
+    border:none;
+    border-top:1px dashed var(--line);
+    margin:20px 0;
+  }
+
+  .history-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+  }
+  .history-item:last-child{border-bottom:none;}
+  .history-item .who{font-weight:800;}
+  .history-item .when{color:var(--espresso-soft); font-size:12.5px;}
+  .clear-history{
+    background:none;
+    border:none;
+    color:var(--coral);
+    font-weight:700;
+    font-size:12.5px;
+    cursor:pointer;
+    padding:0;
+  }
+  .history-head{
+    display:flex; justify-content:space-between; align-items:baseline;
+  }
+
+  /* ---- Winner overlay ---- */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(62,42,30,0.55);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+    padding:20px;
+  }
+  .overlay.show{display:flex;}
+  .winner-card{
+    background:#fff;
+    border-radius:26px;
+    padding:40px 36px;
+    text-align:center;
+    max-width:420px;
+    width:100%;
+    position:relative;
+    box-shadow:0 30px 60px rgba(0,0,0,0.35);
+    animation: pop 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes pop{
+    0%{transform:scale(0.6); opacity:0;}
+    100%{transform:scale(1); opacity:1;}
+  }
+  .winner-card .tea{font-size:52px;}
+  .winner-card .label{
+    font-family:'Baloo 2', sans-serif;
+    color:var(--espresso-soft);
+    font-weight:700;
+    font-size:14px;
+    margin-top:6px;
+  }
+  .winner-card .name{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size:38px;
+    color:var(--coral);
+    margin:10px 0 4px;
+    word-break:break-word;
+  }
+  .winner-card .period{
+    font-size:14px;
+    color:var(--espresso-soft);
+    margin-bottom:22px;
+  }
+  .close-btn{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    background:var(--espresso);
+    color:#fff;
+    border:none;
+    padding:12px 30px;
+    border-radius:999px;
+    cursor:pointer;
+    font-size:15px;
+  }
+  #confettiCanvas{
+    position:fixed; inset:0;
+    pointer-events:none;
+    z-index:60;
+  }
+
+  footer{
+    text-align:center;
+    margin-top:34px;
+    font-size:12.5px;
+    color:var(--espresso-soft);
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="kicker">☕ Monthly Ritual</div>
+    <h1>Who's brewing the <span>tea break</span> this month?</h1>
+    <p class="sub">Add everyone's name, give the wheel a spin, and let luck pick this month's tea break incharge — no arguments, no favourites.</p>
+  </header>
+
+  <div class="layout">
+
+    <!-- Wheel Stage -->
+    <div class="card stage">
+      <div class="period-badge">Draw for <b id="periodLabel">—</b></div>
+
+      <div class="wheel-wrap">
+        <div class="pointer"></div>
+        <canvas id="wheelCanvas" width="640" height="640"></canvas>
+        <div class="hub">🍵</div>
+      </div>
+
+      <button class="spin-btn" id="spinBtn">SPIN THE WHEEL</button>
+      <div class="hint" id="hintText">Add at least 2 names to start the draw.</div>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="card">
+      <p class="panel-title">Set the draw period</p>
+      <p class="panel-desc">Choose which month this draw is for.</p>
+      <div class="period-row">
+        <select id="monthSelect"></select>
+        <input type="number" id="yearInput" min="2000" max="2100">
+      </div>
+
+      <p class="panel-title">Names in the draw</p>
+      <p class="panel-desc">Add everyone who takes a turn making tea.</p>
+      <div class="add-row">
+        <input type="text" id="nameInput" placeholder="Type a name and press Add...">
+        <button class="add-btn" id="addBtn">Add</button>
+      </div>
+      <div class="chips" id="chipsWrap"></div>
+      <div class="empty-note" id="emptyNote" style="display:none;">No names yet — add a few above to fill the wheel.</div>
+
+      <hr class="divider">
+
+      <div class="history-head">
+        <p class="panel-title" style="margin:0;">Past incharges</p>
+        <button class="clear-history" id="clearHistory">Clear all</button>
+      </div>
+      <div id="historyList">
+        <div class="empty-note">No draws yet — this month's winner will show up here.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>Made for the office tea break ritual — spin fair, sip happy ☕</footer>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="winner-card">
+    <div class="tea">🎉☕🎉</div>
+    <div class="label">Tea Break Incharge</div>
+    <div class="name" id="winnerName">—</div>
+    <div class="period" id="winnerPeriod">—</div>
+    <button class="close-btn" id="closeOverlay">Nice one!</button>
+  </div>
+</div>
+<canvas id="confettiCanvas"></canvas>
+
+<script>
+(function(){
+  // ---------- Storage ----------
+  const LS_NAMES = 'teaWheel.names';
+  const LS_PERIOD = 'teaWheel.period';
+  const LS_HISTORY = 'teaWheel.history';
+
+  const palette = ['#E0A527','#FF6B4A','#2A9D8F','#8E5572','#8A8F3C','#4A90A4','#D66B8B','#D9922B'];
+
+  const defaultNames = ['Ayush','Cherish','Rohit','Sudha','Meera','Kabir'];
+
+  let names = JSON.parse(localStorage.getItem(LS_NAMES) || 'null') || defaultNames.slice();
+  let history = JSON.parse(localStorage.getItem(LS_HISTORY) || '[]');
+
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  // ---------- Elements ----------
+  const monthSelect = document.getElementById('monthSelect');
+  const yearInput = document.getElementById('yearInput');
+  const periodLabel = document.getElementById('periodLabel');
+  const nameInput = document.getElementById('nameInput');
+  const addBtn = document.getElementById('addBtn');
+  const chipsWrap = document.getElementById('chipsWrap');
+  const emptyNote = document.getElementById('emptyNote');
+  const spinBtn = document.getElementById('spinBtn');
+  const hintText = document.getElementById('hintText');
+  const canvas = document.getElementById('wheelCanvas');
+  const ctx = canvas.getContext('2d');
+  const overlay = document.getElementById('overlay');
+  const winnerNameEl = document.getElementById('winnerName');
+  const winnerPeriodEl = document.getElementById('winnerPeriod');
+  const closeOverlay = document.getElementById('closeOverlay');
+  const historyList = document.getElementById('historyList');
+  const clearHistoryBtn = document.getElementById('clearHistory');
+
+  let spinning = false;
+  let currentRotation = 0; // degrees
+
+  // ---------- Period setup ----------
+  monthNames.forEach((m, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = m;
+    monthSelect.appendChild(opt);
+  });
+
+  const today = new Date();
+  const savedPeriod = JSON.parse(localStorage.getItem(LS_PERIOD) || 'null');
+  monthSelect.value = savedPeriod ? savedPeriod.month : today.getMonth();
+  yearInput.value = savedPeriod ? savedPeriod.year : today.getFullYear();
+
+  function currentPeriodText(){
+    return monthNames[+monthSelect.value] + ' ' + yearInput.value;
+  }
+  function updatePeriodLabel(){
+    periodLabel.textContent = currentPeriodText();
+    localStorage.setItem(LS_PERIOD, JSON.stringify({month:+monthSelect.value, year:+yearInput.value}));
+  }
+  monthSelect.addEventListener('change', updatePeriodLabel);
+  yearInput.addEventListener('change', updatePeriodLabel);
+  updatePeriodLabel();
+
+  // ---------- Names ----------
+  function saveNames(){
+    localStorage.setItem(LS_NAMES, JSON.stringify(names));
+  }
+
+  function renderChips(){
+    chipsWrap.innerHTML = '';
+    if(names.length === 0){
+      emptyNote.style.display = 'block';
+    } else {
+      emptyNote.style.display = 'none';
+    }
+    names.forEach((name, i) => {
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      const dot = document.createElement('span');
+      dot.className = 'dot';
+      dot.style.background = palette[i % palette.length];
+      const label = document.createElement('span');
+      label.textContent = name;
+      const removeBtn = document.createElement('button');
+      removeBtn.textContent = '✕';
+      removeBtn.title = 'Remove ' + name;
+      removeBtn.addEventListener('click', () => {
+        names.splice(i, 1);
+        saveNames();
+        renderChips();
+        drawWheel();
+        updateSpinAvailability();
+      });
+      chip.appendChild(dot);
+      chip.appendChild(label);
+      chip.appendChild(removeBtn);
+      chipsWrap.appendChild(chip);
+    });
+  }
+
+  function addName(){
+    const val = nameInput.value.trim();
+    if(!val) return;
+    names.push(val);
+    nameInput.value = '';
+    saveNames();
+    renderChips();
+    drawWheel();
+    updateSpinAvailability();
+    nameInput.focus();
+  }
+  addBtn.addEventListener('click', addName);
+  nameInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') addName();
+  });
+
+  function updateSpinAvailability(){
+    if(names.length < 2){
+      spinBtn.disabled = true;
+      hintText.textContent = 'Add at least 2 names to start the draw.';
+    } else {
+      spinBtn.disabled = spinning;
+      hintText.textContent = spinning ? 'Spinning... good luck!' : 'Everyone\'s in — give it a spin!';
+    }
+  }
+
+  // ---------- Wheel drawing ----------
+  function drawWheel(){
+    const size = canvas.width;
+    const cx = size/2, cy = size/2, r = size/2 - 6;
+    ctx.clearRect(0,0,size,size);
+
+    if(names.length === 0){
+      ctx.beginPath();
+      ctx.arc(cx,cy,r,0,Math.PI*2);
+      ctx.fillStyle = '#F1E7D2';
+      ctx.fill();
+      ctx.fillStyle = '#8a7863';
+      ctx.font = '600 22px Nunito, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Add names to build the wheel', cx, cy);
+      return;
+    }
+
+    const n = names.length;
+    const slice = (Math.PI*2) / n;
+
+    for(let i=0;i<n;i++){
+      const start = i*slice - Math.PI/2;
+      const end = start + slice;
+      ctx.beginPath();
+      ctx.moveTo(cx,cy);
+      ctx.arc(cx,cy,r,start,end);
+      ctx.closePath();
+      ctx.fillStyle = palette[i % palette.length];
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // label
+      ctx.save();
+      ctx.translate(cx,cy);
+      ctx.rotate(start + slice/2);
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#fff';
+      ctx.font = '700 24px Baloo 2, sans-serif';
+      ctx.shadowColor = 'rgba(0,0,0,0.25)';
+      ctx.shadowBlur = 4;
+      let label = names[i];
+      if(label.length > 14) label = label.slice(0,13) + '…';
+      ctx.fillText(label, r - 22, 8);
+      ctx.restore();
+    }
+  }
+
+  // ---------- Spin logic ----------
+  function pickWinnerIndex(){
+    return Math.floor(Math.random() * names.length);
+  }
+
+  function spin(){
+    if(spinning || names.length < 2) return;
+    spinning = true;
+    updateSpinAvailability();
+
+    const n = names.length;
+    const slice = 360 / n;
+    const winnerIndex = pickWinnerIndex();
+
+    // Angle (from top, clockwise) of the middle of the winner slice, in the wheel's own coordinate space.
+    const winnerMidAngle = winnerIndex * slice + slice/2;
+
+    // We want: (currentRotation + spinAmount) such that pointer (fixed at top, 0deg)
+    // lands on winnerMidAngle of the wheel. Wheel rotates clockwise by rotation R.
+    // A point originally at angle A ends up at (A + R) mod 360.
+    // We want (winnerMidAngle + R) mod 360 == 0  =>  R = (360 - winnerMidAngle) mod 360
+    const baseTarget = (360 - winnerMidAngle) % 360;
+
+    const extraSpins = 6 + Math.floor(Math.random()*3); // 6-8 full turns
+    const jitter = (Math.random() - 0.5) * (slice * 0.6); // land off-center a little, still inside slice
+
+    const currentMod = currentRotation % 360;
+    let delta = (baseTarget - currentMod + 360) % 360;
+    const totalRotation = currentRotation + delta + extraSpins*360 + jitter;
+
+    currentRotation = totalRotation;
+    canvas.style.transform = `rotate(${totalRotation}deg)`;
+
+    setTimeout(() => {
+      spinning = false;
+      updateSpinAvailability();
+      announceWinner(names[winnerIndex]);
+    }, 4700);
+  }
+
+  spinBtn.addEventListener('click', spin);
+
+  // ---------- Winner + history ----------
+  function announceWinner(name){
+    const period = currentPeriodText();
+    winnerNameEl.textContent = name;
+    winnerPeriodEl.textContent = 'Tea Break Incharge for ' + period;
+    overlay.classList.add('show');
+    launchConfetti();
+
+    history.unshift({ name, period, ts: Date.now() });
+    history = history.slice(0, 24);
+    localStorage.setItem(LS_HISTORY, JSON.stringify(history));
+    renderHistory();
+  }
+
+  closeOverlay.addEventListener('click', () => {
+    overlay.classList.remove('show');
+  });
+
+  function renderHistory(){
+    if(history.length === 0){
+      historyList.innerHTML = '<div class="empty-note">No draws yet — this month\'s winner will show up here.</div>';
+      return;
+    }
+    historyList.innerHTML = '';
+    history.forEach(h => {
+      const row = document.createElement('div');
+      row.className = 'history-item';
+      const left = document.createElement('div');
+      left.innerHTML = '<div class="who">' + escapeHtml(h.name) + '</div><div class="when">' + escapeHtml(h.period) + '</div>';
+      row.appendChild(left);
+      historyList.appendChild(row);
+    });
+  }
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  clearHistoryBtn.addEventListener('click', () => {
+    if(confirm('Clear all past draw history?')){
+      history = [];
+      localStorage.setItem(LS_HISTORY, '[]');
+      renderHistory();
+    }
+  });
+
+  // ---------- Confetti ----------
+  const confettiCanvas = document.getElementById('confettiCanvas');
+  const cctx = confettiCanvas.getContext('2d');
+  let confettiParticles = [];
+  let confettiRunning = false;
+
+  function resizeConfettiCanvas(){
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeConfettiCanvas);
+  resizeConfettiCanvas();
+
+  function launchConfetti(){
+    confettiParticles = [];
+    const colors = palette;
+    for(let i=0;i<140;i++){
+      confettiParticles.push({
+        x: Math.random()*confettiCanvas.width,
+        y: -20 - Math.random()*confettiCanvas.height*0.3,
+        w: 6 + Math.random()*6,
+        h: 8 + Math.random()*8,
+        color: colors[Math.floor(Math.random()*colors.length)],
+        speedY: 2 + Math.random()*3.5,
+        speedX: (Math.random()-0.5)*2.5,
+        rotation: Math.random()*360,
+        rotationSpeed: (Math.random()-0.5)*10,
+        life: 0,
+        maxLife: 220 + Math.random()*60
+      });
+    }
+    if(!confettiRunning){
+      confettiRunning = true;
+      requestAnimationFrame(confettiLoop);
+    }
+  }
+
+  function confettiLoop(){
+    cctx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height);
+    let alive = false;
+    confettiParticles.forEach(p => {
+      p.life++;
+      if(p.life > p.maxLife) return;
+      alive = true;
+      p.x += p.speedX;
+      p.y += p.speedY;
+      p.rotation += p.rotationSpeed;
+      cctx.save();
+      cctx.translate(p.x, p.y);
+      cctx.rotate(p.rotation * Math.PI/180);
+      cctx.fillStyle = p.color;
+      cctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      cctx.restore();
+    });
+    if(alive){
+      requestAnimationFrame(confettiLoop);
+    } else {
+      confettiRunning = false;
+      cctx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height);
+    }
+  }
+
+  // ---------- Init ----------
+  renderChips();
+  drawWheel();
+  renderHistory();
+  updateSpinAvailability();
+
+})();
+</script>
+
+</body>
+</html>
